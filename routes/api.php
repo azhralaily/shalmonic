@@ -2,18 +2,28 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ApiController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ControlsController;
+// DashboardController tidak lagi diperlukan di sini
+// use App\Http\Controllers\DashboardController;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+*/
 
 // Test endpoint sederhana
 Route::get('/test', function () {
     return response()->json(['status' => 'success', 'message' => 'API is working']);
 });
 
-// Rute untuk menerima data POST dari IoT device (tanpa authentication)
-Route::post('/save-data', [ApiController::class, 'storeDatastream']);
-// Rute untuk mengambil datastream (jika digunakan oleh dashboard atau API lain)
-Route::get ('/datastream', [DashboardController::class, 'apiDatastream'])->name('api.datastream');
+// [FIXED] Route untuk menyimpan data dari hardware, memanggil method 'store'
+Route::post('/save-data', [ApiController::class, 'store']);
+
+// [FIXED] Route untuk dashboard, sekarang mengambil data dari ApiController yang benar
+Route::get('/datastream', [ApiController::class, 'datastream'])->name('api.datastream');
+
+// Route untuk riwayat data grafik (sudah benar)
 Route::get('/datastream/history', [ApiController::class, 'history']);
 
 // API endpoint untuk controls yang kompatibel dengan hardware Arduino

@@ -1,734 +1,337 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>TSS Controls</title>
-  <meta name="description" content="Modern, professional IoT Gateway Dashboard inspired by iOS.">
-  <meta name="csrf-token" content="{{ csrf_token() }}">
-  <link rel="stylesheet" href="{{ asset('assets/tailwind.css') }}">
-  <link rel="stylesheet" href="{{ asset('assets/fontawesome/css/all.min.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    /* ... CSS Anda tetap sama seperti sebelumnya, tidak ada perubahan ... */
-    @font-face {
-      font-family: 'Inter';
-      src: url('{{ asset('assets/inter.ttf') }}') format('truetype');
-      font-weight: 100 900;
-      font-style: normal;
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard - ShalMonic</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    @vite('resources/js/app.js')
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <style>
+      body{background:linear-gradient(135deg,#f8fafc,#e0e7ff,#c7f9cc,#fceabb);background-size:400% 400%;animation:gradient-animation 10s ease infinite;font-family:'Figtree',sans-serif}.glass-widget{background:rgba(255,255,255,.75);backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%);border-radius:1.5rem;border:1px solid rgba(229,229,234,.8);box-shadow:0 8px 32px rgba(0,0,0,.07)}.sensor-label{font-size:.95rem;font-weight:500;color:#64748b}.sensor-value{font-size:2rem;font-weight:700;color:#0f172a}.sensor-unit{font-size:1rem;font-weight:500;color:#64748b}.status-indicator.online{background-color:#22c55e;animation:pulse 2s infinite}.status-indicator.offline{background-color:#ef4444}.chart-container{position:relative;height:250px;width:100%}.electrical-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem;background-color:rgba(120,120,128,.08);border-radius:.75rem}@keyframes gradient-animation{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.7)}50%{box-shadow:0 0 0 6px rgba(34,197,94,0)}}
+    .btn-gradient {
+      background: linear-gradient(90deg, #38bdf8 0%, #4ade80 100%);
+      color: white;
+      transition: background 0.3s, transform 0.2s;
+      box-shadow: 0 2px 8px rgba(56,189,248,0.15);
     }
-
-    :root {
-      --ios-blue: #007AFF;
-      --ios-green: #34C759;
-      --ios-red: #FF3B30;
-      --ios-yellow: #FFCC00;
-      --ios-orange: #FF9500;
-      --ios-purple: #AF52DE;
-      --ios-teal: #5AC8FA;
-      --ios-indigo: #5856D6;
-      --text-primary: #1c1c1e;
-      --text-secondary: #8e8e93;
-      --text-tertiary: #c7c7cc;
-      --glass-background: rgba(255, 255, 255, 0.75);
-      --glass-border-color: rgba(229, 229, 234, 0.8);
-      --glass-blur: 20px;
-      --glass-saturation: 180%;
+    .btn-gradient:hover {
+      background: linear-gradient(90deg, #4ade80 0%, #38bdf8 100%);
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 6px 20px rgba(56,189,248,0.18);
     }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      color: var(--text-primary);
-      min-height: 100vh;
-      padding-bottom: 2rem;
-      background: linear-gradient(135deg, #c8e0c8, #e8d8b5, #a8c8d8, #d8c0a0);
-      background-size: 400% 400%;
-      animation: gradient-animation 10s ease infinite;
-    }
-
-    .glass-widget {
-      background: var(--glass-background);
-      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
-      border-radius: 1.25rem;
-      border: 1px solid var(--glass-border-color);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.07);
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-
-    .sensor-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-    }
-
-    .sensor-unit {
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--text-secondary);
-    }
-
-    .sensor-value {
-      font-size: 1.75rem;
-      line-height: 1.1;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    @media (min-width: 640px) {
-      .sensor-value {
-        font-size: 2.1rem;
-      }
-    }
-
-    #battery-bar {
-      transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1), background 0.5s ease;
-      background: var(--ios-green);
-    }
-
-    .status-indicator.online {
-      background-color: var(--ios-green);
-      animation: pulse 2s infinite;
-    }
-
-    .status-indicator.offline {
-      background-color: var(--ios-red);
-      animation: none;
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.7);
-      }
-
-      50% {
-        box-shadow: 0 0 0 6px rgba(52, 199, 89, 0);
-      }
-    }
-
-    @keyframes gradient-animation {
-      0% {
-        background-position: 0% 50%;
-      }
-
-      50% {
-        background-position: 100% 50%;
-      }
-
-      100% {
-        background-position: 0% 50%;
-      }
-    }
-
-    .electrical-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.75rem;
-      background-color: rgba(120, 120, 128, 0.08);
-      border-radius: 0.75rem;
-    }
-
-    .tab-nav {
-      background-color: rgba(120, 120, 128, 0.12);
-      padding: 0.5rem;
-      border-radius: 0.75rem;
-      display: flex;
-      justify-content: space-between;
-      max-width: 100%;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    .tab-nav::-webkit-scrollbar {
-      display: none;
-    }
-
-    .tab-link {
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
-      font-weight: 600;
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      transition: all 0.3s ease;
-      cursor: pointer;
-      white-space: nowrap;
-      flex: 1;
-      text-align: center;
-      margin: 0 0.1rem;
-    }
-
-    .tab-link.active {
-      background-color: var(--glass-background);
-      color: var(--text-primary);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .chart-container {
-      position: relative;
-      height: 250px;
-      width: 100%;
-    }
-  </style>
+    </style>
 </head>
 
-<body class="max-w-screen-lg mx-auto px-3 sm:px-4 md:p-6 pb-8 pt-6">
-
-  <header class="flex justify-between items-start mb-6 sm:mb-8 sm:items-center">
-    <div class="flex items-center gap-3 sm:gap-4">
-      <div class="w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center rounded-xl" style="background-color: rgba(0, 122, 255, 0.1);"><i class="fas fa-solar-panel text-xl sm:text-2xl" style="color: var(--ios-blue);"></i></div>
-      <div>
-        <h1 class="font-bold text-lg sm:text-2xl text-gray-800">TSS Controls</h1>
-
-        <div class="flex items-center gap-2 mt-2 text-xs sm:hidden">
-          <div id="dots-mobile" class="status-indicator w-2 h-2 rounded-full"></div><span id="device-status-mobile" class="font-semibold text-gray-700"></span><span class="text-gray-500">·</span><span id="update-interval-mobile" class="text-gray-500"></span>
+<body class="min-h-screen flex flex-col">
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center"><a href="{{ route('dashboard') }}" class="flex items-center gap-3 hover:opacity-75 transition-opacity"><svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" stroke="teal" stroke-width="2" stroke-linejoin="round"/><path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="teal" stroke-width="2" stroke-linejoin="round"/><path d="M12 22V12" stroke="teal" stroke-width="2" stroke-linejoin="round"/></svg><span class="text-2xl font-bold">ShalMonic</span></a></div>
+                <div class="hidden sm:ml-1 sm:flex sm:items-center"><a href="{{ route('dashboard') }}" class="px-5 py-2 text-teal-600 border-b-2 border-teal-600">Dashboard</a><a href="{{ route('controls') }}" class="px-5 py-2 text-gray-500 hover:text-gray-900">Controls</a><a href="{{ route('dataoverview') }}" class="px-5 py-2 text-gray-500 hover:text-gray-900">Data Overview</a></div>
+                <div class="flex items-center"><form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="w-full text-sm bg-teal-600 text-white rounded-full hover:bg-teal-700 px-4 py-2">Logout</button></form></div>
+            </div>
         </div>
-      </div>
+    </nav>
+
+    <main class="flex-1 w-full max-w-7xl mx-auto py-6 px-4 sm:px-8 lg:px-16">
+        <div class="flex justify-between items-start sm:items-center mb-2">
+            <div><h2 class="text-teal-800 text-3xl sm:text-4xl font-bold mt-1 mb-2">Welcome back, {{ Auth::user()->name }}!</h2><p class="text-gray-500">Here's the latest update from your monitoring system.</p></div>
+            <div class="text-right flex-shrink-0"><div id="header-time" class="text-xl font-bold text-gray-700"></div><div id="header-date" class="text-gray-500"></div>
+            <div class="flex items-center justify-end gap-2 mt-1 text-xs">
+              <div class="status-indicator w-2 h-2 rounded-full"></div>
+              <span id="device-status" class="font-semibold text-gray-700"></span>
+              <span class="text-gray-400">·</span><span id="update-interval" class="text-gray-500"></span>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-col lg:flex-row items-center gap-6 mb-4">
+        <div class="w-full lg:w-2/3">
+            <div class="flex items-center gap-2">
+                <div class="flex-shrink-0">
+                    <img src="{{ asset('assets/shallots.jpg') }}" alt="True Shallot Seed" class="w-28 h-28 rounded-full object-cover border-2 border-white shadow-lg">
+                </div>
+                <div class="p-3 sm:p-3 w-full">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-700 mb-2">Cultivation Information</h3>
+                    <div class="glass-widget p-4 sm:p-3 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                        <div>
+                            <p class="font-semibold text-gray-800">Plantation</p>
+                            <p class="text-gray-600">True Shallot Seed (Bawang Merah)</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Node</p>
+                            <p class="text-gray-600">SPARS Plant Factory, Dramaga</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Cultivation Technique</p>
+                            <p class="text-gray-600">Deep Flow Technique (DFT)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-full lg:w-1/3">
+            <div class="glass-widget p-4 sm:p-5">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-700 mb-2">Filter by Date</h3>
+                <form id="date-filter-form" class="flex items-center gap-2">
+                    <div class="relative flex-grow">
+                        <input type="date" id="date-selector" name="date" class="w-full p-2 pl-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm" value="{{ date('Y-m-d') }}">
+                    </div>
+                    <button type="submit" class="btn-gradient font-semibold px-4 py-2 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-search mr-1"></i>
+                        <span>Submit</span>
+                    </button>
+                </form>
+            </div>
+          </div>
+
     </div>
-    <div class="text-right hidden sm:block">
-      <p id="header-time" class="font-semibold text-xl"></p>
-      <p id="header-date" class="text-sm text-gray-500"></p>
-      <div class="flex items-center justify-end gap-2 mt-1 text-xs">
-        <div id="dots" class="status-indicator w-2 h-2 rounded-full"></div><span id="device-status" class="font-semibold text-gray-700"></span><span class="text-gray-500">·</span><span id="update-interval" class="text-gray-500"></span>
-      </div>
+        <h2 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4 px-2">Environmental Conditions</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 mb-6">
+            <div class="glass-widget p-4 flex flex-col justify-between text-left"><div class="w-10 h-10 flex items-center justify-center rounded-lg bg-orange-100"><i class="fas fa-temperature-half text-xl text-orange-500"></i></div><div class="mt-4"><p class="sensor-label">Temperature</p><div class="flex items-baseline gap-1"><p class="sensor-value" id="sensor1">-</p><p class="sensor-unit">°C</p></div></div></div>
+            <div class="glass-widget p-4 flex flex-col justify-between text-left"><div class="w-10 h-10 flex items-center justify-center rounded-lg bg-teal-100"><i class="fas fa-tint text-xl text-teal-500"></i></div><div class="mt-4"><p class="sensor-label">Humidity</p><div class="flex items-baseline gap-1"><p class="sensor-value" id="sensor2">-</p><p class="sensor-unit">%</p></div></div></div>
+            <div class="glass-widget p-4 flex flex-col justify-between text-left"><div class="w-10 h-10 flex items-center justify-center rounded-lg bg-yellow-100"><i class="fas fa-sun text-xl text-yellow-500"></i></div><div class="mt-4"><p class="sensor-label">Light Intensity</p><div class="flex items-baseline gap-1"><p class="sensor-value" id="sensor3">-</p><p class="sensor-unit">Lx</p></div></div></div>
+            <div class="glass-widget p-4 flex flex-col justify-between text-left"><div class="w-10 h-10 flex items-center justify-center rounded-lg bg-indigo-100"><i class="fas fa-water text-xl text-indigo-500"></i></div><div class="mt-4"><p class="sensor-label">TDS / PPM</p><div class="flex items-baseline gap-1"><p class="sensor-value" id="sensor4">-</p><p class="sensor-unit">ppm</p></div></div></div>
+            <div class="glass-widget p-4 flex flex-col justify-between text-left"><div class="w-10 h-10 flex items-center justify-center rounded-lg bg-green-100"><i class="fas fa-leaf text-xl text-green-500"></i></div><div class="mt-4"><p class="sensor-label">VPD</p><div class="flex items-baseline gap-1"><p class="sensor-value" id="sensor12">-</p><p class="sensor-unit">kPa</p></div></div></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="glass-widget p-4"><p class="sensor-label font-semibold mb-2">Temperature (°C)</p><div class="chart-container"><canvas id="tempChart"></canvas></div></div>
+            <div class="glass-widget p-4"><p class="sensor-label font-semibold mb-2">Humidity (%)</p><div class="chart-container"><canvas id="humidChart"></canvas></div></div>
+            <div class="glass-widget p-4 lg:col-span-2"><p class="sensor-label font-semibold mb-2">Light Intensity (Lx)</p><div class="chart-container"><canvas id="lightChart"></canvas></div></div>
+    <div class="glass-widget p-4 sm:p-5">
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">System Activity</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="electrical-item">
+                <div class="flex items-center gap-4"><i class="fas fa-clock fa-fw text-lg w-6 text-center text-blue-500"></i><span class="sensor-label font-semibold">Last Update</span></div>
+                <div class="font-semibold text-sm text-right text-gray-500"><span id="api-timestamp">-</span></div>
+            </div>
+            <div class="electrical-item">
+                <div class="flex items-center gap-4"><i class="fas fa-bolt fa-fw text-lg w-6 text-center text-red-500"></i><span class="sensor-label font-semibold">Current</span></div>
+                <div class="font-semibold text-md text-right"><span id="sensor6">-</span> <span class="font-medium text-gray-400">A</span></div>
+            </div>
+            <div class="electrical-item">
+                <div class="flex items-center gap-4"><i class="fas fa-plug fa-fw text-lg w-6 text-center text-orange-500"></i><span class="sensor-label font-semibold">Voltage</span></div>
+                <div class="font-semibold text-md text-right"><span id="sensor7">-</span> <span class="font-medium text-gray-400">V</span></div>
+            </div>
+            <div class="electrical-item">
+                <div class="flex items-center gap-4"><i class="fas fa-wave-square fa-fw text-lg w-6 text-center text-blue-500"></i><span class="sensor-label font-semibold">Power</span></div>
+                <div class="font-semibold text-md text-right"><span id="sensor8">-</span> <span class="font-medium text-gray-400">W</span></div>
+            </div>
+            <div class="electrical-item">
+                <div class="flex items-center gap-4"><i class="fas fa-chart-line fa-fw text-lg w-6 text-center text-indigo-500"></i><span class="sensor-label font-semibold">Power Factor</span></div>
+                <div class="font-semibold text-md text-right"><span id="sensor9">-</span></div>
+            </div>
+            <div class="electrical-item">
+                <div class="flex items-center gap-4"><i class="fas fa-tachometer-alt fa-fw text-lg w-6 text-center text-teal-500"></i><span class="sensor-label font-semibold">Frequency</span></div>
+                <div class="font-semibold text-md text-right"><span id="sensor10">-</span> <span class="font-medium text-gray-400">Hz</span></div>
+            </div>
+        </div>
     </div>
-  </header>
-  <nav class="mb-6">
-    <div class="tab-nav">
-        <a href="{{ route('dashboard') }}" class="tab-link active">Dashboard</a>
-        <a href="{{ route('controls') }}" class="tab-link">Controls</a>
-        <a href="{{ route('dataoverview') }}" class="tab-link">Data Log</a>
+
+    <div class="glass-widget p-4 sm:p-5">
+        <h2 class="text-lg font-semibold text-gray-700 mb-4">Plant Growth Status</h2>
+
+        <div class="space-y-2">
+            <div class="flex justify-between text-sm font-medium text-gray-500">
+                <span id="progress-start-date">Day 0</span>
+                <span id="progress-hst" class="font-bold text-emerald-600">Day 11</span>
+                <span id="progress-end-date">Day 90</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5">
+                <div id="progress-bar" class="bg-emerald-500 h-2.5 rounded-full" style="width: 12%"></div>
+            </div>
+        </div>
+
+        <div class="mt-6 space-y-3">
+            <div class="flex justify-between items-center">
+                <p class="text-gray-500">Tanggal Tanam</p>
+                <p id="info-seeding-date" class="font-semibold text-gray-800">1 Juli 2025</p>
+            </div>
+            <div class="flex justify-between items-center">
+                <p class="text-gray-500">Fase Pertumbuhan</p>
+                <p id="info-current-stage" class="font-semibold text-emerald-600">Fase Semai</p>
+            </div>
+            <div class="flex justify-between items-center">
+                <p class="text-gray-500">Perkiraan Panen</p>
+                <p id="info-harvest-date" class="font-semibold text-orange-500">29 September 2025</p>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-gray-200/60">
+             <button id="toggle-form-btn" class="w-full text-center text-sm text-indigo-600 font-semibold hover:text-indigo-800 transition-colors">
+                Atur Tanggal Tanam
+            </button>
+        </div>
+       
+        <div id="input-form" class="bg-black/5 p-4 mt-4 rounded-lg hidden">
+            <form id="seeding-form" class="space-y-4">
+                <div>
+                    <label for="seeding-date-input" class="block text-sm font-medium text-gray-700 mb-1">Pilih Tanggal Tanam</label>
+                    <input type="date" id="seeding-date-input" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                     <label for="duration-input" class="block text-sm font-medium text-gray-700 mb-1">Estimasi Durasi Tanam (hari)</label>
+                    <input type="number" id="duration-input" value="90" class="w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    Simpan & Update Status
+                </button>
+            </form>
+        </div>
     </div>
-  </nav>
+    </div>
+    </main>
 
-  <main class="space-y-6">
-    <section class="tab-content" id="dashboard-content">
-      <h2 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4 px-2">Sensor Readings</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
-        <div class="glass-widget p-4 flex flex-col justify-between text-left">
-          <div class="w-10 h-10 flex items-center justify-center rounded-lg" style="background-color: rgba(255, 149, 0, 0.15);"><i class="fas fa-temperature-half text-xl" style="color: var(--ios-orange);"></i></div>
-          <div class="mt-4">
-            <p class="sensor-label">Temperature</p>
-            <div class="flex items-baseline gap-1">
-              <p class="sensor-value" id="sensor1">-</p>
-              <p class="sensor-unit">°C</p>
-            </div>
-          </div>
-        </div>
-        <div class="glass-widget p-4 flex flex-col justify-between text-left">
-          <div class="w-10 h-10 flex items-center justify-center rounded-lg" style="background-color: rgba(90, 200, 250, 0.15);"><i class="fas fa-tint text-xl" style="color: var(--ios-teal);"></i></div>
-          <div class="mt-4">
-            <p class="sensor-label">Humidity</p>
-            <div class="flex items-baseline gap-1">
-              <p class="sensor-value" id="sensor2">-</p>
-              <p class="sensor-unit">%</p>
-            </div>
-          </div>
-        </div>
-        <div class="glass-widget p-4 flex flex-col justify-between text-left">
-          <div class="w-10 h-10 flex items-center justify-center rounded-lg" style="background-color: rgba(255, 204, 0, 0.15);"><i class="fas fa-sun text-xl" style="color: var(--ios-yellow);"></i></div>
-          <div class="mt-4">
-            <p class="sensor-label">Light Intensity</p>
-            <div class="flex items-baseline gap-1">
-              <p class="sensor-value" id="sensor3">-</p>
-              <p class="sensor-unit">Lx</p>
-            </div>
-          </div>
-        </div>
-        <div class="glass-widget p-4 flex flex-col justify-between text-left">
-          <div class="w-10 h-10 flex items-center justify-center rounded-lg" style="background-color: rgba(88, 86, 214, 0.15);"><i class="fas fa-water text-xl" style="color: var(--ios-indigo);"></i></div>
-          <div class="mt-4">
-            <p class="sensor-label">TDS / PPM</p>
-            <div class="flex items-baseline gap-1">
-              <p class="sensor-value" id="sensor4">-</p>
-              <p class="sensor-unit">ppm</p>
-            </div>
-          </div>
-        </div>
-        <div class="glass-widget p-4 flex flex-col justify-between text-left">
-          <div class="w-10 h-10 flex items-center justify-center rounded-lg" style="background-color: rgba(52, 199, 89, 0.15);"><i class="fas fa-leaf text-xl" style="color: var(--ios-green);"></i></div>
-          <div class="mt-4">
-            <p class="sensor-label">VPD</p>
-            <div class="flex items-baseline gap-1">
-              <p class="sensor-value" id="sensor12">-</p>
-              <p class="sensor-unit">kPa</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <script>
+          document.addEventListener('DOMContentLoaded', function () {
+        // Ambil semua elemen yang dibutuhkan
+        const form = document.getElementById('seeding-form');
+        const toggleBtn = document.getElementById('toggle-form-btn');
+        const formContainer = document.getElementById('input-form');
 
-      <h2 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4 px-2 mt-6">System Power</h2>
-      <div class="glass-widget p-4 sm:p-5">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="electrical-item sm:col-span-2">
-            <div class="flex items-center gap-4">
-              <i class="fas fa-clock fa-fw text-lg w-6 text-center" style="color: var(--ios-blue)"></i>
-              <span class="sensor-label font-semibold">Last Data Update</span>
-            </div>
-            <div class="font-semibold text-sm text-right text-gray-500">
-              <span id="api-timestamp">-</span>
-            </div>
-          </div>
-          <div class="electrical-item">
-            <div class="flex items-center gap-4"><i class="fas fa-bolt fa-fw text-lg w-6 text-center" style="color: var(--ios-red)"></i><span class="sensor-label font-semibold">Current</span></div>
-            <div class="font-semibold text-md text-right"><span id="sensor6">-</span> <span class="font-medium text-gray-400">A</span></div>
-          </div>
-          <div class="electrical-item">
-            <div class="flex items-center gap-4"><i class="fas fa-plug fa-fw text-lg w-6 text-center" style="color: var(--ios-orange)"></i><span class="sensor-label font-semibold">Voltage</span></div>
-            <div class="font-semibold text-md text-right"><span id="sensor7">-</span> <span class="font-medium text-gray-400">V</span></div>
-          </div>
-          <div class="electrical-item">
-            <div class="flex items-center gap-4"><i class="fas fa-wave-square fa-fw text-lg w-6 text-center" style="color: var(--ios-blue)"></i><span class="sensor-label font-semibold">Power</span></div>
-            <div class="font-semibold text-md text-right"><span id="sensor8">-</span> <span class="font-medium text-gray-400">W</span></div>
-          </div>
-          <div class="electrical-item">
-            <div class="flex items-center gap-4"><i class="fas fa-chart-line fa-fw text-lg w-6 text-center" style="color: var(--ios-indigo)"></i><span class="sensor-label font-semibold">Power Factor</span></div>
-            <div class="font-semibold text-md text-right"><span id="sensor9">-</span> <span class="font-medium text-gray-400"></span></div>
-          </div>
-          <div class="electrical-item">
-            <div class="flex items-center gap-4"><i class="fas fa-tachometer-alt fa-fw text-lg w-6 text-center" style="color: var(--ios-teal)"></i><span class="sensor-label font-semibold">Frequency</span></div>
-            <div class="font-semibold text-md text-right"><span id="sensor10">-</span> <span class="font-medium text-gray-400">Hz</span></div>
-          </div>
-          <div class="electrical-item">
-            <div class="flex items-center gap-4"><i class="fas fa-burn fa-fw text-lg w-6 text-center" style="color: var(--ios-purple)"></i><span class="sensor-label font-semibold">Energy</span></div>
-            <div class="font-semibold text-md text-right"><span id="sensor11">-</span> <span class="font-medium text-gray-400">kWh</span></div>
-          </div>
-        </div>
-      </div>
-      
-      <h2 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4 px-2 mt-6">Manual Input Values</h2>
-      <div class="glass-widget p-4 sm:p-5">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label for="ppm-input" class="block text-sm font-medium text-gray-700 mb-2">TDS / PPM (ppm)</label>
-            <div class="flex gap-2">
-              <input type="number" id="ppm-input" min="0" step="0.1" class="flex-1 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter PPM value">
-              <button onclick="updateManualValue('ppm')" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                <i class="fas fa-save"></i>
-              </button>
-            </div>
-          </div>
-          <div>
-            <label for="vpd-input" class="block text-sm font-medium text-gray-700 mb-2">VPD (kPa)</label>
-            <div class="flex gap-2">
-              <input type="number" id="vpd-input" min="0" step="0.01" class="flex-1 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="Enter VPD value">
-              <button onclick="updateManualValue('vpd')" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                <i class="fas fa-save"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="mt-4 text-sm text-gray-500">
-          <i class="fas fa-info-circle mr-1"></i>
-          These values are manually set and will be displayed in the sensor readings above.
-        </div>
-      </div>
-      
-      <h2 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4 px-2 mt-6">Charts</h2>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
-        <div class="glass-widget p-4">
-          <p class="sensor-label font-semibold mb-2">Temperature (°C)</p>
-          <div class="chart-container"><canvas id="tempChart"></canvas></div>
-        </div>
-        <div class="glass-widget p-4">
-          <p class="sensor-label font-semibold mb-2">Humidity (%)</p>
-          <div class="chart-container"><canvas id="humidChart"></canvas></div>
-        </div>
-        <div class="glass-widget p-4">
-          <p class="sensor-label font-semibold mb-2">Light Intensity (Lx)</p>
-          <div class="chart-container"><canvas id="lightChart"></canvas></div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <script>
-    // Script tidak berubah sampai `resetSensorDisplays`
-    function updateDateTime() {
-      const now = new Date();
-      document.getElementById('header-time').textContent = now.toLocaleTimeString('id-ID', {
-        hour12: false
-      });
-      document.getElementById('header-date').textContent = now.toLocaleDateString('id-ID', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      });
-    }
-    setInterval(updateDateTime, 1000);
-    updateDateTime();
-    const statusIndicators = document.querySelectorAll('.status-indicator');
-    const statusTextElements = document.querySelectorAll('#device-status, #device-status-mobile');
-    const updateIntervalElements = document.querySelectorAll('#update-interval, #update-interval-mobile');
-
-    function updateStatusUI(isOnline, message) {
-      statusIndicators.forEach(dot => {
-        dot.classList.toggle('online', isOnline);
-        dot.classList.toggle('offline', !isOnline);
-      });
-      statusTextElements.forEach(el => el.textContent = isOnline ? 'Online' : 'Offline');
-      updateIntervalElements.forEach(el => el.textContent = message);
-    }
-
-    // MODIFIKASI: Fungsi reset diperbarui untuk elemen timestamp
-    function resetSensorDisplays() {
-      for (let i = 1; i <= 12; i++) {
-        const el = document.getElementById(`sensor${i}`);
-        if (el) el.textContent = '-';
-      }
-      const batteryBar = document.getElementById('battery-bar');
-      if (batteryBar) {
-        batteryBar.style.width = '0%';
-        batteryBar.style.backgroundColor = 'var(--text-tertiary)';
-      }
-      const batteryIcon = document.getElementById('battery-icon');
-      if (batteryIcon) {
-        batteryIcon.className = 'fas fa-battery-slash text-2xl';
-        batteryIcon.style.color = 'var(--text-tertiary)';
-      }
-      const batteryTextColor = document.getElementById('battery-text-color');
-      if (batteryTextColor) {
-        batteryTextColor.style.color = 'var(--text-tertiary)';
-      }
-      // BARU: Reset elemen timestamp
-      const timestampEl = document.getElementById('api-timestamp');
-      if (timestampEl) timestampEl.textContent = '-';
-    }
-
-    // Sisa script tidak berubah sampai `load_datastream`
-    const getChartOptions = (title) => ({
-      responsive: true,
-      maintainAspectRatio: false,
-      animation: {
-        duration: 0,
-        easing: 'easeInOutQuad'
-      },
-      scales: {
-        x: {
-          ticks: {
-            color: '#333333'
-          },
-          grid: {
-            color: 'rgba(100, 100, 100, 0.2)'
-          }
-        },
-        y: {
-          ticks: {
-            color: '#333333'
-          },
-          grid: {
-            color: 'rgba(100, 100, 100, 0.2)'
-          }
-        }
-      },
-      plugins: {
-        legend: {
-          display: false
-        },
-        tooltip: {
-          backgroundColor: 'rgba(0,0,0,0.9)',
-          titleColor: '#ffffff',
-          bodyColor: '#ffffff',
-          borderColor: 'rgba(255,255,255,0.2)',
-          borderWidth: 1
-        }
-      },
-      interaction: {
-        intersect: false,
-        mode: 'index',
-      },
-      elements: {
-        point: {
-          radius: 2,
-          hoverRadius: 4
-        },
-        line: {
-          tension: 0.2
-        }
-      }
-    });
-
-    function createOptimizedChart(elementId, color) {
-      const ctx = document.getElementById(elementId).getContext('2d');
-      return new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: [],
-          datasets: [{
-            label: elementId.replace('Chart', ''),
-            data: [],
-            borderColor: color,
-            backgroundColor: 'rgba(0, 0, 0, 0)',
-            borderWidth: 3,
-            pointRadius: 2,
-            tension: 0.2,
-            fill: false
-          }]
-        },
-        options: getChartOptions(elementId.replace('Chart', ''))
-      });
-    }
-    const tempChart = createOptimizedChart('tempChart', '#FF5A36');
-    const humidChart = createOptimizedChart('humidChart', '#00A5FF');
-    const lightChart = createOptimizedChart('lightChart', '#FFD700');
-
-    function updateChart(chart, newData) {
-      const timeLabel = new Date().toLocaleTimeString('en-GB', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-      chart.data.labels.push(timeLabel);
-      chart.data.datasets[0].data.push(newData);
-      const maxDataPoints = 50;
-      if (chart.data.labels.length > maxDataPoints) {
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
-      }
-      chart.update('quiet');
-    }
-
-    function parseCustomTimestamp(tsString) {
-      if (!tsString) return null;
-      const cleanString = tsString.replace(' - ', ' ').replace(' WIB', '');
-      const date = new Date(cleanString);
-      return isNaN(date.getTime()) ? null : date;
-    }
-    let lastTemp = null,
-      lastHumid = null,
-      lastLight = null;
-    const refresh_time = 1000;
-
-    // Function untuk update nilai manual
-    async function updateManualValue(type) {
-      const input = document.getElementById(type + '-input');
-      const value = parseFloat(input.value);
-      
-      if (isNaN(value) || value < 0) {
-        alert('Please enter a valid positive number');
-        return;
-      }
-
-      try {
-        const response = await fetch('{{ route("update.manual.values") }}', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-          },
-          body: JSON.stringify({
-            ppm: type === 'ppm' ? value : parseFloat(document.getElementById('ppm-input').value) || 0,
-            vpd: type === 'vpd' ? value : parseFloat(document.getElementById('vpd-input').value) || 0
-          })
+        // Fungsi untuk toggle (buka/tutup) form
+        toggleBtn.addEventListener('click', () => {
+            formContainer.classList.toggle('hidden');
         });
+        
+        // Fungsi utama untuk kalkulasi dan update UI
+        function updatePlantStatus(event) {
+            if(event) event.preventDefault(); // Mencegah reload halaman jika dari form submit
 
-        if (response.ok) {
-          const result = await response.json();
-          console.log('Manual value updated:', result);
-          
-          // Update display immediately
-          if (type === 'ppm') {
-            document.getElementById('sensor4').textContent = value;
-          } else if (type === 'vpd') {
-            document.getElementById('sensor12').textContent = value;
-          }
-          
-          // Show success message
-          const button = input.nextElementSibling;
-          const originalText = button.innerHTML;
-          button.innerHTML = '<i class="fas fa-check"></i>';
-          button.classList.add('bg-green-500');
-          setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.remove('bg-green-500');
-          }, 1000);
-        } else {
-          throw new Error('Failed to update value');
-        }
-      } catch (error) {
-        console.error('Error updating manual value:', error);
-        alert('Failed to update value. Please try again.');
-      }
-    }
+            const seedingDateInput = document.getElementById('seeding-date-input').value;
+            const duration = parseInt(document.getElementById('duration-input').value) || 90;
+            
+            // Gunakan tanggal tanam dari input, atau default ke 1 Juli 2025 jika kosong
+            const seedingDate = seedingDateInput ? new Date(seedingDateInput) : new Date('2025-07-01T00:00:00');
+            
+            const today = new Date(); // Tanggal saat ini (12 Juli 2025)
 
-    // Helper: Format time to HH:mm
-    function formatTime(dateString) {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-    }
+            // 1. Kalkulasi HST (Hari Setelah Tanam)
+            const timeDiff = today.getTime() - seedingDate.getTime();
+            const hst = Math.max(0, Math.floor(timeDiff / (1000 * 3600 * 24)));
 
-    // Fetch and update chart data for the last 10 minutes
-    async function updateChartsWithHistory() {
-      try {
-        const response = await fetch('/api/datastream/history?minutes=10');
-        if (!response.ok) throw new Error('Failed to fetch history');
-        const history = await response.json();
+            // 2. Kalkulasi Perkiraan Panen
+            const harvestDate = new Date(seedingDate);
+            harvestDate.setDate(harvestDate.getDate() + duration);
 
-        // Jika history kosong, JANGAN reset chart, biarkan data lama tetap tampil
-        if (!history || history.length === 0) {
-          // Bisa tampilkan pesan "No new data" di luar chart jika mau
-          return;
-        }
-
-        // Ambil data dan label
-        const labels = history.map(d => {
-          const date = new Date(d.timestamp);
-          return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-        });
-        const tempData = history.map(d => d.temp);
-        const humidData = history.map(d => d.humid);
-        const lightData = history.map(d => d.light_intensity);
-
-        // Update chart
-        tempChart.data.labels = labels;
-        tempChart.data.datasets[0].data = tempData;
-        tempChart.data.datasets[0].label = 'Temperature (°C)';
-        tempChart.options.scales.y.title = { display: true, text: '°C' };
-        tempChart.options.scales.y.min = 21;
-        tempChart.options.scales.y.max = 23;
-        tempChart.options.scales.y.ticks = {
-          stepSize: 1, 
-          callback: function(value) { return value + '°C'; }
-        };
-        tempChart.update();
-
-        humidChart.data.labels = labels;
-        humidChart.data.datasets[0].data = humidData;
-        humidChart.data.datasets[0].label = 'Air Humidity';
-        humidChart.options.scales.y.title = { display: true, text: '%' };
-        humidChart.options.plugins.legend.display = true;
-        humidChart.update();
-
-        lightChart.data.labels = labels;
-        lightChart.data.datasets[0].data = lightData;
-        lightChart.data.datasets[0].label = 'Light Intensity (Lx)';
-        lightChart.options.scales.y.title = { display: true, text: 'Lx' };
-        lightChart.data.datasets[0].backgroundColor = '#9575CD';
-        lightChart.data.datasets[0].borderColor = '#9575CD';
-        lightChart.data.datasets[0].borderWidth = 1;
-        lightChart.data.datasets[0].type = 'bar';
-        lightChart.update();
-      } catch (error) {
-        console.error('Error updating charts:', error);
-      }
-    }
-
-    // Update setiap 1 menit
-    setInterval(updateChartsWithHistory, 60000);
-    document.addEventListener('DOMContentLoaded', updateChartsWithHistory);
-
-    async function load_datastream() {
-      try {
-        const response = await fetch("{{ route('api.datastream') }}");
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        const data = await response.json();
-
-        // Logika timeout tidak berubah
-        const TIMEOUT_SECONDS = 10;
-        if (data.timestamp) {
-          const lastUpdate = parseCustomTimestamp(data.timestamp);
-          if (lastUpdate) {
-            const now = new Date();
-            const diffSeconds = (now.getTime() - lastUpdate.getTime()) / 1000;
-            if (diffSeconds > TIMEOUT_SECONDS) {
-              updateStatusUI(false, 'Device timeout');
-            } else {
-              updateStatusUI(true, `Last update ${Math.round(diffSeconds)}s ago`);
+            // 3. Tentukan Fase Pertumbuhan
+            let currentStage = 'Fase Semai';
+            if (hst > duration) {
+                currentStage = 'Siap Panen';
+            } else if (hst > duration * 0.66) {
+                currentStage = 'Fase Generatif';
+            } else if (hst > duration * 0.15) {
+                currentStage = 'Fase Vegetatif';
             }
-          } else {
-            updateStatusUI(false, 'Invalid timestamp');
-            console.error("Invalid timestamp format received:", data.timestamp);
-          }
-        } else {
-          updateStatusUI(true, 'Timestamp missing');
-          console.warn("Timestamp field is missing from API response.");
+
+            // 4. Kalkulasi Progress Bar
+            const progressPercentage = Math.min(100, (hst / duration) * 100);
+
+            // Opsi format tanggal (contoh: 12 Juli 2025)
+            const dateOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+
+            // 5. Update semua elemen di UI
+            document.getElementById('progress-hst').textContent = `Day ${hst}`;
+            document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+            document.getElementById('progress-end-date').textContent = `Day ${duration}`;
+            
+            document.getElementById('info-seeding-date').textContent = seedingDate.toLocaleDateString('id-ID', dateOptions);
+            document.getElementById('info-current-stage').textContent = currentStage;
+            document.getElementById('info-harvest-date').textContent = harvestDate.toLocaleDateString('id-ID', dateOptions);
+            
+            // Tutup form setelah submit
+            if(event) formContainer.classList.add('hidden');
         }
 
-        // BARU: Update elemen timestamp
-        const timestampEl = document.getElementById('api-timestamp');
-        if (timestampEl && data.timestamp) {
-          timestampEl.textContent = data.timestamp;
-        }
+        // Jalankan fungsi saat form disubmit
+        form.addEventListener('submit', updatePlantStatus);
 
-        // BARU: Update input fields dengan nilai yang ada
-        if (data.ppm !== undefined) {
-          document.getElementById('ppm-input').value = data.ppm;
-        }
-        if (data.vpd !== undefined) {
-          document.getElementById('vpd-input').value = data.vpd;
-        }
-
-        // Mapping sensor tidak berubah
-        const mapping = {
-          sensor1: data.temp,
-          sensor2: data.humid,
-          sensor3: data.light_intensity,
-          sensor4: data.ppm,
-          sensor5: data.batt,
-          sensor6: data.current,
-          sensor7: data.voltage,
-          sensor8: data.power,
-          sensor9: data.pf,
-          sensor10: data.freq,
-          sensor11: data.energy,
-          sensor12: data.vpd
-        };
-        Object.entries(mapping).forEach(([id, value]) => {
-          const element = document.getElementById(id);
-          if (element) element.textContent = value ?? '-';
-        });
-
-        // Sisa fungsi (battery, chart) tidak ada perubahan
-        // const batteryPercentage = parseFloat(data.batt);
-        // const batteryBar = document.getElementById('battery-bar');
-        // const batteryIcon = document.getElementById('battery-icon');
-        // const batteryTextColor = document.getElementById('battery-text-color');
-        // if (!isNaN(batteryPercentage) && batteryBar && batteryIcon && batteryTextColor) {
-        //   batteryBar.style.width = `${batteryPercentage}%`;
-        //   let color, iconClass;
-        //   if (batteryPercentage <= 20) {
-        //     color = 'var(--ios-red)';
-        //     iconClass = 'fas fa-battery-quarter text-2xl';
-        //   } else if (batteryPercentage <= 50) {
-        //     color = 'var(--ios-orange)';
-        //     iconClass = 'fas fa-battery-half text-2xl';
-        //   } else {
-        //     color = 'var(--ios-green)';
-        //     iconClass = 'fas fa-battery-full text-2xl';
-        //   }
-        //   batteryBar.style.backgroundColor = color;
-        //   batteryIcon.style.color = color;
-        //   batteryTextColor.style.color = color;
-        //   batteryIcon.className = iconClass;
-        // }
-        if (data.temp !== undefined && data.temp !== lastTemp) {
-          updateChart(tempChart, data.temp);
-          lastTemp = data.temp;
-        }
-        if (data.humid !== undefined && data.humid !== lastHumid) {
-          updateChart(humidChart, data.humid);
-          lastHumid = data.humid;
-        }
-        if (data.light_intensity !== undefined && data.light_intensity !== lastLight) {
-          updateChart(lightChart, data.light_intensity);
-          lastLight = data.light_intensity;
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        updateStatusUI(false, 'Connection failed');
-        resetSensorDisplays();
-      }
-    }
-    document.addEventListener("DOMContentLoaded", () => {
-      load_datastream();
-      setInterval(load_datastream, refresh_time);
+        // Jalankan fungsi saat halaman pertama kali dimuat untuk menampilkan data default
+        updatePlantStatus();
     });
-  </script>
+        // --- FUNGSI DASAR & UI ---
+        function updateDateTime() { const now = new Date(); const timeEl = document.getElementById('header-time'); const dateEl = document.getElementById('header-date'); if(timeEl) timeEl.textContent = now.toLocaleTimeString('id-ID', { hour12: false }); if(dateEl) dateEl.textContent = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); }
+        setInterval(updateDateTime, 1000); updateDateTime();
+        const statusIndicators = document.querySelectorAll('.status-indicator'); const statusTextElements = document.querySelectorAll('#device-status'); const updateIntervalElements = document.querySelectorAll('#update-interval');
+        function updateStatusUI(isOnline, message) { statusIndicators.forEach(dot => { dot.classList.toggle('online', isOnline); dot.classList.toggle('offline', !isOnline); }); statusTextElements.forEach(el => el.textContent = isOnline ? 'Online' : 'Offline'); updateIntervalElements.forEach(el => el.textContent = message); }
+        function resetSensorDisplays() { for (let i = 1; i <= 12; i++) { const el = document.getElementById(`sensor${i}`); if (el) el.textContent = '-'; } const timestampEl = document.getElementById('api-timestamp'); if (timestampEl) timestampEl.textContent = '-'; }
+        
+        // --- LOGIKA GRAFIK ---
+        const getChartOptions = (title) => ({ responsive: true, maintainAspectRatio: false, animation: { duration: 0 }, scales: { x: { ticks: { color: '#333' }, grid: { color: 'rgba(100, 100, 100, 0.1)' } }, y: { ticks: { color: '#333' }, grid: { color: 'rgba(100, 100, 100, 0.2)' } } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: 'rgba(0,0,0,0.9)', titleColor: '#ffffff', bodyColor: '#ffffff', intersect: false, mode: 'index' } }, elements: { point: { radius: 2, hoverRadius: 4 }, line: { tension: 0.2 } } });
+        function createOptimizedChart(elementId, color) { const ctx = document.getElementById(elementId)?.getContext('2d'); if (!ctx) return null; return new Chart(ctx, { type: 'line', data: { labels: [], datasets: [{ label: elementId.replace('Chart', ''), data: [], borderColor: color, backgroundColor: 'rgba(0, 0, 0, 0)', borderWidth: 2.5, fill: false }] }, options: getChartOptions(elementId.replace('Chart', '')) }); }
+        const tempChart = createOptimizedChart('tempChart', '#FF5A36'); const humidChart = createOptimizedChart('humidChart', '#00A5FF'); const lightChart = createOptimizedChart('lightChart', '#FFD700');
+        function updateChart(chart, newData) { if (!chart) return; const timeLabel = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }); chart.data.labels.push(timeLabel); chart.data.datasets[0].data.push(newData); const maxDataPoints = 30; if (chart.data.labels.length > maxDataPoints) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); } chart.update('quiet'); }
+        
+        // --- [FIXED] PARSING & LOGIKA DATA ---
+        // Fungsi parser disamakan dengan dataoverview.blade.php agar andal
+        function parseTimestamp(tsString) {
+            if (!tsString) return null;
+            // Langsung konversi format dari database (YYYY-MM-DD HH:MM:SS atau ISO8601)
+            const date = new Date(tsString);
+            return isNaN(date.getTime()) ? null : date;
+        }
+
+        const refresh_time = 5000; // Refresh setiap 5 detik
+
+        async function load_datastream(dateFilter = null) {
+            try {
+                let apiUrl = "{{ route('api.datastream') }}";
+                if (dateFilter) { apiUrl += `?date=${dateFilter}`; }
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+
+                // [FIXED] Logika status online/offline disamakan dengan dataoverview.blade.php
+                if (data && data.timestamp) {
+                    const TIMEOUT_SECONDS = 15; // Toleransi waktu 15 detik
+                    const lastUpdate = parseTimestamp(data.timestamp);
+                    if (lastUpdate) {
+                        const diffSeconds = (new Date().getTime() - lastUpdate.getTime()) / 1000;
+                        const isOnline = diffSeconds <= TIMEOUT_SECONDS;
+                        const message = isOnline ? `Last update ${Math.round(diffSeconds)}s ago` : 'Device timeout';
+                        updateStatusUI(isOnline, message);
+                    } else {
+                        updateStatusUI(false, 'Invalid timestamp format');
+                    }
+                } else {
+                    updateStatusUI(false, 'No data from API');
+                }
+
+                // Update UI
+                const apiTimestampEl = document.getElementById('api-timestamp');
+                if(apiTimestampEl) apiTimestampEl.textContent = data.timestamp ? new Date(data.timestamp).toLocaleTimeString('id-ID') : '-';
+                
+                const mapping = { sensor1: data.temp, sensor2: data.humid, sensor3: data.light_intensity, sensor4: data.ppm, sensor6: data.current, sensor7: data.voltage, sensor8: data.power, sensor9: data.pf, sensor10: data.freq, sensor12: data.vpd };
+                Object.entries(mapping).forEach(([id, value]) => { const element = document.getElementById(id); if (element) element.textContent = (value !== null && value !== undefined) ? value : '-'; });
+
+                if (!dateFilter) {
+                    if (data.temp !== undefined) updateChart(tempChart, data.temp);
+                    if (data.humid !== undefined) updateChart(humidChart, data.humid);
+                    if (data.light_intensity !== undefined) updateChart(lightChart, data.light_intensity);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                updateStatusUI(false, 'Connection failed');
+                resetSensorDisplays();
+            }
+        }
+
+        // --- INISIALISASI ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const today = new Date(); const year = today.getFullYear(); const month = String(today.getMonth() + 1).padStart(2, '0'); const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('date-selector').value = `${year}-${month}-${day}`;
+            document.getElementById('date-filter-form').addEventListener('submit', function(e) { e.preventDefault(); const selectedDate = document.getElementById('date-selector').value; console.log("Fitur filter tanggal belum dihubungkan ke backend. Memuat data untuk:", selectedDate); });
+            load_datastream(); 
+            setInterval(() => load_datastream(), refresh_time);
+        });
+    </script>
 </body>
-
 </html>
-

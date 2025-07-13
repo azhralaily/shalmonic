@@ -9,7 +9,37 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="flex items-center justify-center min-h-screen">
+<style>
+    body {
+     background: linear-gradient(135deg, #f8fafc, #e0e7ff, #c7f9cc, #fceabb);
+     background-size: 400% 400%;
+     animation: gradient-animation 10s ease infinite;
+     font-family: 'Poppins', sans-serif;
+    }
+        @keyframes gradient-animation {
+                0% {
+                    background-position: 0% 50%;
+                }
+                50% {
+                    background-position: 100% 50%;
+                }
+                100% {
+                    background-position: 0% 50%;
+                }
+            }
+         .btn-gradient {
+                background: linear-gradient(90deg, #38bdf8 0%, #4ade80 100%);
+                color: white;
+                transition: background 0.3s, transform 0.2s;
+                box-shadow: 0 2px 8px rgba(56,189,248,0.15);
+            }
+            .btn-gradient:hover {
+                background: linear-gradient(90deg, #4ade80 0%, #38bdf8 100%);
+                transform: translateY(-2px) scale(1.03);
+                box-shadow: 0 6px 20px rgba(56,189,248,0.18);
+     }
+</style>
     <div class="w-full max-w-md bg-white p-8 rounded-3xl shadow-lg mx-auto">
         <!-- Logo/ikon di bagian atas -->
         <div class="flex items-center justify-center mb-8">
@@ -64,7 +94,7 @@
                     <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
                 @enderror
             </div>
-            <button type="submit" class="w-full bg-teal-600 text-white py-2 rounded-full hover:bg-teal-700 transition duration-300">
+            <button type="submit" class="w-full btn-gradient py-2 rounded-full font-semibold text-lg">
                 Register
             </button>
         </form>

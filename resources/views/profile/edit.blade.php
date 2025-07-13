@@ -25,13 +25,13 @@
                 </div>
             </div>
 
-            @if(Auth::user()->role === 'admin')
+            @if(false)
                 <div class="mt-4">
                     <label for="role" class="block font-medium text-sm text-gray-700">Role</label>
                     <select name="role" id="role" class="form-select mt-1 block w-full">
-                        <option value="admin" {{ Auth::user()->role == 'admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="operator" {{ Auth::user()->role == 'operator' ? 'selected' : '' }}>Operator</option>
-                        <option value="guest" {{ Auth::user()->role == 'guest' ? 'selected' : '' }}>Guest</option>
+                        <option value="admin">Admin</option>
+                        <option value="operator">Operator</option>
+                        <option value="guest">Guest</option>
                     </select>
                 </div>
             @endif

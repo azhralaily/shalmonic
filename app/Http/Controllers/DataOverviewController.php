@@ -2,85 +2,82 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Support\Facades\Validator;
 use App\Models\Datastream;
-use Exception;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DataOverviewController extends Controller
 {
-    /**
-     * Display the data overview page.
-     */
     public function index()
     {
         return view('dataoverview');
     }
 
-    /**
-     * Fetch data for the table via AJAX.
-     */
-    public function fetchData(Request $request)
+    public function fetch(Request $request)
     {
-        try {
-            $validator = Validator::make($request->all(), [
-                'limit' => 'sometimes|integer|min:1|max:100',
-            ]);
+        $limit = $request->input('limit', 25);
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-            if ($validator->fails()) {
-                return response()->json(['error' => 'Invalid limit parameter.'], 400);
-            }
+        $query = Datastream::select(
+                'id',
+                'timestamp',
+                'temp',
+                'humid',
+                'light_intensity',
+                'ppm',
+                'vpd',
+                'voltage',
+                'current',
+                'power',
+                'pf',
+                'freq',
+                'energy'
+            );
 
-            $limit = $request->input('limit', 25);
-
-            $data = Datastream::orderBy('id', 'desc')
-                              ->limit($limit)
-                              ->get();
-
-            return response()->json($data);
-        } catch (Exception $e) {
-            // Generic error for security
-            return response()->json(['error' => 'Could not retrieve data from the database.'], 500);
+        // Filter berdasarkan tanggal jika disediakan
+        if ($startDate && $endDate) {
+            $query->whereBetween('timestamp', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
         }
+
+        $data = $query->latest()->take($limit)->get();
+
+        return response()->json($data);
     }
 
-    /**
-     * Export all data to a CSV file.
-     */
-    public function exportCsv()
+    public function export()
     {
-        try {
-            $headers = [
-                'Content-Type'        => 'text/csv; charset=utf-8',
-                'Content-Disposition' => 'attachment; filename="TSS_Controls_Data_Log_All_' . date('Y-m-d') . '.csv"',
-            ];
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="shalmonic_datalog_'.date('Y-m-d').'.csv"',
+        ];
 
-            $callback = function() {
-                $output = fopen('php://output', 'w');
-                
-                // Use a representative row to get column headers to handle empty table case
-                $firstRow = Datastream::first();
-                if ($firstRow) {
-                    $columns = array_keys($firstRow->toArray());
-                    fputcsv($output, $columns);
+        $columns = [
+            'ID', 'Timestamp', 'Temp', 'Humid', 'Light Intensity', 'PPM', 'VPD',
+            'Voltage', 'Current', 'Power', 'PF', 'Freq', 'Energy'
+        ];
+        
+        $selectColumns = [
+            'id', 'timestamp', 'temp', 'humid', 'light_intensity', 'ppm', 'vpd',
+            'voltage', 'current', 'power', 'pf', 'freq', 'energy'
+        ];
+
+        $callback = function() use ($columns, $selectColumns) {
+            $file = fopen('php://output', 'w');
+            
+            // [FIXED] Menambahkan argumen ';' untuk menggunakan titik koma sebagai pemisah
+            fputcsv($file, $columns, ';');
+
+            Datastream::select($selectColumns)->latest()->chunk(500, function ($datastreams) use ($file) {
+                foreach ($datastreams as $data) {
+                    // [FIXED] Menambahkan argumen ';' untuk setiap baris data
+                    fputcsv($file, $data->toArray(), ';');
                 }
+            });
 
-                // Stream the rest of the data
-                Datastream::orderBy('id', 'asc')->chunk(200, function ($rows) use ($output) {
-                    foreach ($rows as $row) {
-                        fputcsv($output, $row->toArray());
-                    }
-                });
-                
-                fclose($output);
-            };
+            fclose($file);
+        };
 
-            return Response::stream($callback, 200, $headers);
-
-        } catch (Exception $e) {
-            // Redirect back with an error message if export fails
-            return redirect()->route('dataoverview')->with('error', 'Could not export CSV: ' . $e->getMessage());
-        }
+        return new StreamedResponse($callback, 200, $headers);
     }
-} 
+}

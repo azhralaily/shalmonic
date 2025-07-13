@@ -30,11 +30,7 @@ class ProfileController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'role' => 'sometimes|in:admin,operator,guest',
         ]);
-        if ($user->role === 'admin' && isset($data['role'])) {
-            $user->role = $data['role'];
-        }
         $user->name = $data['name'];
         $user->email = $data['email'];
         $user->save();
@@ -42,7 +38,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
+     * Delete the user's account.DU
      */
     public function destroy(Request $request): RedirectResponse
     {

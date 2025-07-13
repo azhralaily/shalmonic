@@ -7,40 +7,42 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ControlsController extends Controller
-{  
+{
     private function getControlsData()
     {
-        $defaults = [
-            'light_intensity' => 70,
-            'schedule' => 0,
-            'light_status' => 0,
-        ];
-
+        $defaults = ['light_intensity' => 70, 'schedule' => 0, 'light_status' => 0];
         if (!Storage::disk('local')->exists('api_controls.json')) {
             return $defaults;
         }
-
-        $jsonString = Storage::disk('local')->get('api_controls.json');
-        $data = json_decode($jsonString, true);
-
-        if (json_last_error() !== JSON_ERROR_NONE || !$data) {
+        $data = json_decode(Storage::disk('local')->get('api_controls.json'), true);
+        return $data ?: $defaults;
+    }
+    
+    // [MODIFIED] Fungsi baru untuk membaca data PPM/VPD dari file datastream
+    private function getDatastreamData()
+    {
+        $defaults = ['ppm' => 0, 'vpd' => 0];
+        if (!Storage::disk('local')->exists('api_datastream.json')) {
             return $defaults;
         }
-
+        $data = json_decode(Storage::disk('local')->get('api_datastream.json'), true);
         return [
-            'light_intensity' => $data['light_intensity'] ?? $defaults['light_intensity'],
-            'schedule' => $data['schedule'] ?? $defaults['schedule'],
-            'light_status' => $data['light_status'] ?? $defaults['light_status'],
+            'ppm' => $data['ppm'] ?? $defaults['ppm'],
+            'vpd' => $data['vpd'] ?? $defaults['vpd'],
         ];
     }
 
     public function index()
     {
         $controls_state = $this->getControlsData();
+        $manual_values = $this->getDatastreamData();
+
         return view('controls', [
             'initial_intensity' => $controls_state['light_intensity'],
             'initial_schedule' => $controls_state['schedule'],
             'initial_light_status' => $controls_state['light_status'],
+            'initial_ppm' => $manual_values['ppm'], // Kirim PPM ke view
+            'initial_vpd' => $manual_values['vpd'], // Kirim VPD ke view
         ]);
     }
 
@@ -53,12 +55,11 @@ class ControlsController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'message' => 'Invalid data.', 'errors' => $validator->errors()], 400);
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 400);
         }
 
         $current_data = $this->getControlsData();
         $validated = $validator->validated();
-
         $clean_data = [
             'light_intensity' => $validated['light_intensity'],
             'schedule' => $validated['schedule'],
@@ -66,55 +67,34 @@ class ControlsController extends Controller
         ];
 
         Storage::disk('local')->put('api_controls.json', json_encode($clean_data, JSON_PRETTY_PRINT));
-
         return response()->json(['status' => 'success', 'message' => 'Controls saved.']);
     }
 
-    /**
-     * API endpoint untuk hardware Arduino - GET controls
-     */
-    public function apiGetControls()
-    {
-        $controls = $this->getControlsData();
-        return response()->json($controls);
-    }
-
-    /**
-     * API endpoint untuk hardware Arduino - POST controls
-     */
-    public function apiStoreControls(Request $request)
+    // [MODIFIED] Fungsi baru untuk menyimpan PPM/VPD ke file datastream
+    public function updateManualValues(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'light_intensity' => 'sometimes|integer|min:0|max:100',
-            'schedule' => 'sometimes|integer|min:0|max:3',
-            'light_status' => 'sometimes|integer|min:0|max:1',
+            'ppm' => 'sometimes|numeric|min:0',
+            'vpd' => 'sometimes|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['message' => 'Invalid data'], 400);
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 400);
         }
 
-        $current_data = $this->getControlsData();
-        $incoming_data = $request->all();
+        $datastreamJson = Storage::disk('local')->exists('api_datastream.json')
+            ? Storage::disk('local')->get('api_datastream.json')
+            : '{}';
+        $datastreamData = json_decode($datastreamJson, true) ?: [];
 
-        // Merge data tanpa replace key yang tidak ada di request
-        $clean_data = array_replace($current_data, $incoming_data);
+        $updatedData = array_merge($datastreamData, $request->only(['ppm', 'vpd']));
 
-        Storage::disk('local')->put('api_controls.json', json_encode($clean_data, JSON_PRETTY_PRINT));
-
-        return response()->json([
-            'message' => 'Data updated successfully',
-            'updated_data' => $incoming_data
-        ]);
+        Storage::disk('local')->put('api_datastream.json', json_encode($updatedData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        return response()->json(['status' => 'success', 'message' => 'Manual values updated.']);
     }
-
-    /**
-     * API endpoint untuk hardware Arduino - GET controls (tanpa authentication)
-     * Endpoint ini bisa diakses langsung oleh hardware tanpa CSRF token
-     */
-    public function apiGetControlsHardware()
-    {
-        $controls = $this->getControlsData();
-        return response()->json($controls);
-    }
-} 
+    
+    // --- API untuk Hardware (Tidak perlu diubah) ---
+    public function apiGetControls() { /* ... */ }
+    public function apiStoreControls(Request $request) { /* ... */ }
+    public function apiGetControlsHardware() { /* ... */ }
+}

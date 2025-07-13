@@ -67,11 +67,7 @@
             <h3 class="font-bold text-lg mb-2">Edit Account</h3>
             <input type="text" name="name" id="edit_name" placeholder="Name" class="border rounded p-2 w-full" required>
             <input type="email" name="email" id="edit_email" placeholder="Email" class="border rounded p-2 w-full" required>
-            <select name="role" id="edit_role" class="border rounded p-2 w-full">
-                <option value="guest">Guest</option>
-                <option value="operator">Operator</option>
-                <option value="admin">Admin</option>
-            </select>
+            <!-- Hapus select role -->
             <div class="flex gap-2 justify-end">
                 <button type="button" onclick="editModal.close()" class="px-4 py-2 bg-gray-300 rounded">Cancel</button>
                 <button class="px-4 py-2 bg-green-600 text-white rounded">Save</button>
