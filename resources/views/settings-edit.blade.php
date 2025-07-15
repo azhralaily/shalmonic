@@ -80,10 +80,11 @@
                     <div class="mt-2">
                         <select id="role" name="role" class="block w-full rounded-md border-0 py-2 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                             <option value="user" @selected(old('role', $user->role) == 'user')>User</option>
+                            <option value="operator" @selected(old('role', $user->role) == 'operator')>Operator</option> {{-- Tambahkan ini --}}
                             <option value="admin" @selected(old('role', $user->role) == 'admin')>Admin</option>
                         </select>
                     </div>
-                     @error('role')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
+                    @error('role')<p class="mt-2 text-sm text-red-600">{{ $message }}</p>@enderror
                 </div>
                 
                 <div class="mt-8 flex items-center justify-end gap-x-4 border-t border-gray-900/10 pt-6">

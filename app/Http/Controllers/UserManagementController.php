@@ -29,7 +29,8 @@ class UserManagementController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'role' => ['required', 'in:user,admin'],
+            // Ubah baris di bawah ini
+            'role' => ['required', 'in:user,admin,operator'], 
         ]);
 
         $user->name = $request->name;
@@ -47,7 +48,8 @@ class UserManagementController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:user,admin'],
+            // Ubah baris di bawah ini
+            'role' => ['required', 'in:user,admin,operator'],
         ]);
 
         User::create([

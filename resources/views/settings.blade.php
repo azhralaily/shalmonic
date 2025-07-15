@@ -143,6 +143,7 @@
                 <x-input-label for="role" value="Role" />
                 <select id="role" name="role" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                     <option value="user" @selected(old('role') == 'user')>User</option>
+                    <option value="operator" @selected(old('role') == 'operator')>Operator</option> {{-- Tambahkan ini --}}
                     <option value="admin" @selected(old('role') == 'admin')>Admin</option>
                 </select>
                 <x-input-error :messages="$errors->get('role')" class="mt-2" />

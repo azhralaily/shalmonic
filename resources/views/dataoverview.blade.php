@@ -57,19 +57,6 @@
         </div>
     </div>
 </nav>
-
-                <div class="flex items-center">
-                    <form method="POST" action="{{ route('logout') }}" class="flex items-center">
-                        @csrf
-                        <button type="submit" class="w-full text-sm bg-teal-600 text-white rounded-full hover:bg-teal-700 px-4 py-2">
-                            Logout
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </nav>
-
     <main class="flex-1 w-full max-w-7xl mx-auto py-6 px-4 sm:px-8 lg:px-16">
         <div class="flex justify-between items-start sm:items-center mb-6">
             <div><h2 class="text-teal-800 text-3xl sm:text-4xl font-bold mt-1 mb-2">Data Overview</h2><p class="text-gray-500">View historical sensor readings from the device.</p></div>
