@@ -45,9 +45,16 @@ Route::middleware(['auth', RoleMiddleware::class . ':admin,operator'])->group(fu
 // ==========================================
 // GRUP HANYA UNTUK ADMIN
 // ==========================================
-Route::middleware(['auth', 'role:admin'])->group(function () {
-    // Anda bisa menambahkan rute manajemen pengguna di sini
-    // Contoh: Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+Route::middleware(['auth', RoleMiddleware::class . ':admin'])->prefix('settings')->name('settings.')->group(function () {
+    Route::get('/', [UserManagementController::class, 'index'])->name('index');
+    Route::post('/', [UserManagementController::class, 'store'])->name('store');
+    
+    // Route untuk menampilkan halaman edit
+    Route::get('/{user}/edit', [UserManagementController::class, 'edit'])->name('edit');
+    // Route untuk memproses update
+    Route::put('/{user}', [UserManagementController::class, 'update'])->name('update');
+    // Route untuk menghapus
+    Route::delete('/{user}', [UserManagementController::class, 'destroy'])->name('destroy');
 });
 
 require __DIR__.'/auth.php';

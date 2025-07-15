@@ -1,52 +1,74 @@
 <?php
+
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules;
 
 class UserManagementController extends Controller
 {
-    public function index(Request $request)
+    // Menampilkan halaman utama manajemen akun
+    public function index()
     {
-        $query = User::query();
-        if ($request->filled('email')) {
-            $query->where('email', 'like', '%' . $request->email . '%');
-        }
-        $users = $query->get();
-        return view('manage_accounts.index', compact('users'));
+        $users = User::orderBy('name')->get();
+        return view('settings', compact('users'));
     }
 
-    public function update(Request $request)
+    // Menampilkan halaman form untuk mengedit user
+    public function edit(User $user)
     {
-        $user = User::findOrFail($request->id);
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->save();
-        return back()->with('success', 'User updated!');
+        return view('settings-edit', compact('user'));
     }
 
-    public function delete(Request $request)
-    {
-        $user = User::findOrFail($request->id);
-        if ($user->id == auth()->id()) {
-            return back()->with('error', 'Cannot delete yourself!');
-        }
-        $user->delete();
-        return back()->with('success', 'User deleted!');
-    }
-
-    public function create(Request $request)
+    // Memproses update data user (termasuk role)
+    public function update(Request $request, User $user)
     {
         $request->validate([
-            'name' => 'required',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'role' => ['required', 'in:user,admin'],
         ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->role = $request->role;
+        $user->save();
+
+        return redirect()->route('settings.index')->with('status', 'user-updated');
+    }
+
+    // Menyimpan user baru
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', 'in:user,admin'],
+        ]);
+
         User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $request->role,
         ]);
-        return back()->with('success', 'User created!');
+
+        return back()->with('status', 'user-created');
     }
-} 
+
+    // Menghapus user
+    public function destroy(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'You cannot delete your own account.');
+        }
+
+        $user->delete();
+
+        return back()->with('status', 'user-deleted');
+    }
+}

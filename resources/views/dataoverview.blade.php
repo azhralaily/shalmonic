@@ -24,16 +24,48 @@
 </head>
 
 <body class="min-h-screen flex flex-col">
-    <nav class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center"><a href="{{ route('dashboard') }}" class="flex items-center gap-3 hover:opacity-75 transition-opacity"><svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" stroke="teal" stroke-width="2" stroke-linejoin="round"/><path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="teal" stroke-width="2" stroke-linejoin="round"/><path d="M12 22V12" stroke="teal" stroke-width="2" stroke-linejoin="round"/></svg><span class="text-2xl font-bold">ShalMonic</span></a></div>
-                <div class="hidden sm:ml-1 sm:flex sm:items-center">
-                    <a href="{{ route('dashboard') }}" class="px-5 py-2 text-gray-500 hover:text-gray-900">Dashboard</a>
-                    <a href="{{ route('controls') }}" class="px-5 py-2 text-gray-500 hover:text-gray-900">Controls</a>
-                    <a href="{{ route('dataoverview') }}" class="px-5 py-2 text-teal-600 border-b-2 border-teal-600">Data Overview</a>
+<nav class="bg-white/75 backdrop-blur-lg shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 hover:opacity-75 transition-opacity">
+                    <svg class="h-8 w-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L3 7V17L12 22L21 17V7L12 2Z" stroke="teal" stroke-width="2" stroke-linejoin="round"/><path d="M12 2L3 7L12 12L21 7L12 2Z" stroke="teal" stroke-width="2" stroke-linejoin="round"/><path d="M12 22V12" stroke="teal" stroke-width="2" stroke-linejoin="round"/></svg>
+                    <span class="text-2xl font-semibold text-gray-800">ShalMonic</span>
+                </a>
+            </div>
+            <div class="hidden sm:ml-1 sm:flex sm:items-center">
+                {{-- Link yang bisa dilihat semua user yang sudah login --}}
+                <a href="{{ route('dashboard') }}" class="px-5 py-2 font-light hover:text-gray-900 {{ request()->routeIs('dashboard') ? 'text-teal-600 border-b-2 border-teal-600' : 'text-gray-600' }}">Dashboard</a>
+                
+                {{-- Link HANYA untuk Admin dan Operator --}}
+                @if(Auth::user()->role == 'admin' || Auth::user()->role == 'operator')
+                <a href="{{ route('controls') }}" class="px-5 py-2 font-light hover:text-gray-900 {{ request()->routeIs('controls') ? 'text-teal-600 border-b-2 border-teal-600' : 'text-gray-600' }}">Controls</a>
+                <a href="{{ route('dataoverview') }}" class="px-5 py-2 font-light hover:text-gray-900 {{ request()->routeIs('dataoverview') ? 'text-teal-600 border-b-2 border-teal-600' : 'text-gray-600' }}">Data Overview</a>
+                @endif
+                
+                {{-- Link HANYA untuk Admin --}}
+                @if(Auth::user()->role == 'admin')
+                    <a href="{{ route('settings.index') }}" class="px-5 py-2 font-light hover:text-gray-900 {{ request()->routeIs('settings.*') ? 'text-teal-600 border-b-2 border-teal-600' : 'text-gray-600' }}">Settings</a>
+                @endif
+            </div>
+            <div class="flex items-center">
+                <form method="POST" action="{{ route('logout') }}?redirect_to=dashboard">
+                    @csrf
+                    <button type="submit" class="w-full text-sm bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors px-4 py-2 font-light">Logout</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</nav>
+
+                <div class="flex items-center">
+                    <form method="POST" action="{{ route('logout') }}" class="flex items-center">
+                        @csrf
+                        <button type="submit" class="w-full text-sm bg-teal-600 text-white rounded-full hover:bg-teal-700 px-4 py-2">
+                            Logout
+                        </button>
+                    </form>
                 </div>
-                <div class="flex items-center"><form method="POST" action="{{ route('logout') }}">@csrf<button type="submit" class="w-full text-sm bg-teal-600 text-white rounded-full hover:bg-teal-700 px-4 py-2">Logout</button></form></div>
             </div>
         </div>
     </nav>
